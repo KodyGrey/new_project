@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>Оформление каюты</h2>
+    {% if age < 21 and sex == "male" %}
+    {% set a = "orange" %}
+    {% elif age >= 21 and sex == "male" %}
+    {% set a = "yellow" %}
+    {% elif age < 21 and sex == "female" %}
+    {% set a = "green" %}
+    {% elif age >= 21 and sex == "female" %}
+    {% set a = "blue" %}
+    {% endif %}
+    <table>
+        <tr>
+            <th>Цвет стен</th>
+            <th>Эмблема</th>
+        </tr>
+        <tr>
+            <td bgcolor="{{a}}"></td>
+            <td><img src="{{url_for('static', filename='img/big_alien.png' if age >= 21 else 'img/small_alien.png')}}"></td>
+        </tr>
+    </table>
+
+{% endblock %}

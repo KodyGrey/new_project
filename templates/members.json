@@ -1,0 +1,19 @@
+{
+  "members": [
+    {
+      "name": "Gennadiy Bukin",
+      "image": "big_alien.png",
+      "professions": ["Менеджер", "Специалист по экипировке"]
+    },
+    {
+      "name": "Alex Miller",
+      "image": "small_alien.png",
+      "professions": ["PR специалист", "Специалист по автоматизации"]
+    },
+    {
+      "name": "Kody Grey",
+      "image": "mars1.jpg",
+      "professions": ["Руководитель экспедиции", "Инженер энергетических систем"]
+    }
+  ]
+}

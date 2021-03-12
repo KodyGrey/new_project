@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h4>Фамилия: {{dtc["surname"]}}</h4>
+    <h4>Имя: {{dtc["name"]}}</h4>
+    <h4>Образование: {{dtc["education"]}}</h4>
+    <h4>Профессия: {{dtc["profession"]}}</h4>
+    <h4>Пол: {{dtc["sex"]}}</h4>
+    <h4>Мотивация: {{dtc["motivation"]}}</h4>
+    <h4>Готовы остаться на марсе? {{dtc["ready"]}}</h4>
+{% endblock %}

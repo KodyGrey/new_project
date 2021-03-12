@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if list == "ol" %}
+        <h2>Список профессий</h2>
+        <ol>
+            {% for el in professions %}
+                <li>{{el}}</li>
+            {% endfor %}
+        </ol>
+    {% elif list == "ul" %}
+        <h2>Список профессий</h2>
+        <ul>
+            {% for el in professions %}
+                <li>{{el}}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="alert alert-danger" role="alert">Неверный параметр запроса</div>
+    {% endif %}
+{% endblock %}
