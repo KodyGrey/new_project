@@ -1,18 +1,25 @@
-def func(x, y, a):
-    return (5 * y - x > a) or not (2 * x + 3 * y < 90) or not (y - 2 * x < -50)
+from flask import Flask, request, url_for, redirect, render_template
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField, FileField
+from wtforms.validators import DataRequired
+from werkzeug.utils import secure_filename
+from data import db_session
+from data.users import User
+from data.jobs import Jobs
+import datetime
+import json
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'poprobuy_vzlomat'
+db_session.global_init('db/mission_mars.db')
 
 
-c = 0
-for a in range(1, 1000):
+@app.route('/')
+def jobs_table():
+    db_sess = db_session.create_session()
+    jobs = db_sess.query(Jobs)
+    return render_template('jobs_table.html', jobs=jobs)
 
-    flag = 0
-    for x in range(1, 1000):
-        for y in range(1, 1000):
-            if not func(x, y, a):
-                flag = 1
-    if flag == 0:
-        c += 1
-        print(a, end=' ')
-print()
 
-print(c)
+if __name__ == '__main__':
+    app.run(port=8080, host='127.0.0.1')
