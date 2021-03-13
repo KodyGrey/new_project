@@ -1,6 +1,6 @@
 from flask import Flask, request, url_for, redirect, render_template
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, FileField
+from wtforms import StringField, PasswordField, SubmitField, FileField, IntegerField
 from wtforms.validators import DataRequired
 from werkzeug.utils import secure_filename
 from data import db_session
@@ -107,6 +107,45 @@ def jobs_table():
     db_sess = db_session.create_session()
     jobs = db_sess.query(Jobs)
     return render_template('jobs_table.html', jobs=jobs)
+
+
+class RegisterForm(FlaskForm):
+    email = StringField('Login/email', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    repeated_password = PasswordField('Repeat password', validators=[DataRequired()])
+    surname = StringField('Surname', validators=[DataRequired()])
+    name = StringField('Name', validators=[DataRequired()])
+    age = IntegerField('Age', validators=[DataRequired()])
+    position = StringField('Position', validators=[DataRequired()])
+    speciality = StringField('Speciality', validators=[DataRequired()])
+    address = StringField('Address', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        user = User()
+        if db_sess.query(User).filter(User.email == form.email.data).first():
+            return render_template('register.html', form=form,
+                                   error_message="User is already exists")
+        user.email = form.email.data
+        if form.password.data != form.repeated_password.data:
+            return render_template('register.html', form=form,
+                                   error_message="Passwords doesn't match")
+        user.set_password(form.password.data)
+        user.surname = form.surname.data
+        user.name = form.name.data
+        user.age = form.age.data
+        user.position = form.position.data
+        user.speciality = form.speciality.data
+        user.address = form.address.data
+        db_sess.add(user)
+        db_sess.commit()
+
+    return render_template('register.html', form=form)
 
 
 if __name__ == '__main__':
