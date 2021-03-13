@@ -14,6 +14,94 @@ app.config['SECRET_KEY'] = 'poprobuy_vzlomat'
 db_session.global_init('db/mission_mars.db')
 
 
+@app.route('/<string:title>')
+@app.route('/index/<string:title>')
+def index(title):
+    return render_template('base.html', title=title)
+
+
+@app.route('/training/<string:prof>')
+def training(prof):
+    return render_template('training.html', prof=prof)
+
+
+@app.route('/list_prof/<list>')
+def list_prof(list):
+    professions = ['инженер исследователь', 'пилот', 'строитель', 'экзобиолог', 'врач']
+    return render_template('list_prof.html', list=list, professions=professions)
+
+
+@app.route('/answer')
+@app.route('/auto_answer')
+def answer():
+    dtc = {
+        'title': 'Анкета',
+        'surname': 'Букин',
+        'name': 'Геннадий',
+        'education': 'начально',
+        'profession': 'бизнесмен',
+        'sex': 'мужской',
+        'motivation': 'Хочу подальше от Земли',
+        'ready': True
+    }
+    return render_template('answer.html', title=dtc['title'], dtc=dtc)
+
+
+class LoginForm(FlaskForm):
+    astronaut_id = StringField('Id астронавта', validators=[DataRequired()])
+    astronaut_password = PasswordField('Пароль астронавта', validators=[DataRequired()])
+    captain_id = StringField('Id капитана', validators=[DataRequired()])
+    captain_password = PasswordField('Пароль капитана', validators=[DataRequired()])
+    submit = SubmitField('Доступ')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        return redirect('/success')
+    return render_template('login.html', title='Аварийный доступ', form=form)
+
+
+@app.route('/distribution')
+def distribution():
+    lst = ['Gennadiy Bukin', 'Alex Miller', 'Kody Grey']
+    return render_template('distribution.html', list=lst)
+
+
+@app.route('/table_params/<string:sex>/<int:age>')
+def table(sex, age):
+    return render_template('table.html', sex=sex, age=age)
+
+
+class ImageField(FlaskForm):
+    file = FileField('Загрузить картинку')
+    submit = SubmitField('Добавить')
+
+
+mars_landscape_images = ['mars1.jpg']
+
+
+@app.route('/gallery', methods=['GET', 'POST'])
+def gallery():
+    global mars_landscape_images
+    form = ImageField()
+    if form.validate_on_submit():
+        f = form.file.data
+        filename = secure_filename(f.filename)
+        f.save(f'static/img/{filename}')
+        mars_landscape_images.append(filename)
+        return redirect('/gallery')
+    return render_template('gallery.html', form=form, lst=mars_landscape_images)
+
+
+@app.route('/member')
+def member():
+    with open('templates/members.json', encoding='utf-8') as f:
+        dtc = json.load(f)
+    return render_template('member.html', dtc=dtc)
+
+
 @app.route('/')
 def jobs_table():
     db_sess = db_session.create_session()
