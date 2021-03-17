@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 from data import db_session
 from data.users import User
 from data.jobs import Jobs
+from data.departments import Department
 from flask_login import LoginManager, login_required, login_user, logout_user, \
     current_user
 import datetime
@@ -235,6 +236,72 @@ def delete_job(job_id):
         db_sess.delete(job)
         db_sess.commit()
     return redirect('/')
+
+
+@app.route('/departments')
+def department_table():
+    db_sess = db_session.create_session()
+    departments = db_sess.query(Department)
+    return render_template('departments_table.html', departments=departments)
+
+
+class AddDepartment(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    chief = IntegerField('Chief ID', validators=[DataRequired()])
+    members = StringField('Members')
+    email = EmailField('Department Email', validators=[DataRequired()])
+    submit = SubmitField('Add')
+
+
+@app.route('/add_department', methods=["GET", "POST"])
+def add_department():
+    form = AddDepartment()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        department = Department()
+        department.title = form.title.data
+        department.chief = form.chief.data
+        department.members = form.members.data
+        department.email = form.email.data
+        db_sess.add(department)
+        db_sess.commit()
+        return redirect('/departments')
+
+    return render_template('add_department.html', form=form)
+
+
+@app.route('/edit_department/<int:department_id>', methods=["GET", "POST"])
+@login_required
+def edit_department(department_id):
+    form = AddDepartment()
+    db_sess = db_session.create_session()
+    department = db_sess.query(Department).filter(Department.id == department_id).first()
+    if current_user.id not in [1, department.chief]:
+        abort(404)
+    if form.validate_on_submit():
+        department.title = form.title.data
+        department.chief = form.chief.data
+        department.members = form.members.data
+        department.email = form.email.data
+        db_sess.commit()
+        return redirect('/departments')
+    form.title.data = department.title
+    form.chief.data = department.chief
+    form.members.data = department.members
+    form.email.data = department.email
+
+    return render_template('add_department.html', form=form)
+
+
+@app.route('/delete_department/<int:department_id>')
+@login_required
+def delete_department(department_id):
+    db_sess = db_session.create_session()
+    department = db_sess.query(Department).filter(Department.id == department_id).first()
+    if current_user.id in [1, department.chief]:
+        db_sess.delete(department)
+        db_sess.commit()
+    return redirect('/departments')
 
 
 if __name__ == '__main__':
