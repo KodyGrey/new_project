@@ -14,6 +14,7 @@
                     <th>Team leader</th>
                     <th>Duration</th>
                     <th>List of collaborators</th>
+                    <th>Hazard category</th>
                     <th>Is finished</th>
                 </tr>
                 <tr>
@@ -21,6 +22,7 @@
                     <td>{{job.user.surname + job.user.name}}</td>
                     <td>{{job.work_size}} hours</td>
                     <td>{{job.collaborators}}</td>
+                    <td>{{job.category[0].id}}</td>
                     <td>{{'Finished' if job.is_finished else 'Is not finished'}}</td>
                 </tr>
             </table>

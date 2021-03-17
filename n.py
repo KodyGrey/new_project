@@ -9,6 +9,7 @@ from data import db_session
 from data.users import User
 from data.jobs import Jobs
 from data.departments import Department
+from data.category import Category
 from flask_login import LoginManager, login_required, login_user, logout_user, \
     current_user
 import datetime
@@ -173,6 +174,7 @@ class AddJob(FlaskForm):
     team_leader = IntegerField('Team Leader ID', validators=[DataRequired()])
     work_size = IntegerField('Work size in hours', validators=[DataRequired()])
     collaborators = StringField('Collaborators IDs', validators=[DataRequired()])
+    category = IntegerField('Hazard category ID', validators=[DataRequired()])
     is_finished = BooleanField('Is job finished?')
     submit = SubmitField('Add')
 
@@ -188,6 +190,9 @@ def add_job():
         job.work_size = form.work_size.data
         job.collaborators = form.collaborators.data
         job.is_finished = form.is_finished.data
+        category = db_sess.query(Category).filter(
+            Category.id == form.category.data).first()
+        job.category.append(category)
         db_sess.add(job)
         db_sess.commit()
         return redirect('/')
@@ -216,8 +221,14 @@ def edit_job(job_id):
         job.job = form.job.data
         job.collaborators = form.collaborators.data
         job.work_size = form.work_size.data
+        job.category.remove(
+            db_sess.query(Category).filter(Category.id == job.category[0].id).first())
+        category = db_sess.query(Category).filter(
+            Category.id == form.category.data).first()
+        job.category.append(category)
         db_sess.commit()
         return redirect('/')
+    form.category.data = job.category[0].id
     form.team_leader.data = job.team_leader
     form.is_finished.data = job.is_finished
     form.job.data = job.job
