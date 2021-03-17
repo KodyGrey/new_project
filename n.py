@@ -1,17 +1,28 @@
 from flask import Flask, request, url_for, redirect, render_template
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, FileField, IntegerField
+from wtforms import StringField, PasswordField, SubmitField, FileField, IntegerField, \
+    BooleanField, DateField
+from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 from werkzeug.utils import secure_filename
 from data import db_session
 from data.users import User
 from data.jobs import Jobs
+from flask_login import LoginManager, login_required, login_user, logout_user
 import datetime
 import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'poprobuy_vzlomat'
 db_session.global_init('db/mission_mars.db')
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    db_sess = db_session.create_session()
+    return db_sess.query(User).get(user_id)
 
 
 @app.route('/<string:title>')
@@ -45,22 +56,6 @@ def answer():
         'ready': True
     }
     return render_template('answer.html', title=dtc['title'], dtc=dtc)
-
-
-class LoginForm(FlaskForm):
-    astronaut_id = StringField('Id астронавта', validators=[DataRequired()])
-    astronaut_password = PasswordField('Пароль астронавта', validators=[DataRequired()])
-    captain_id = StringField('Id капитана', validators=[DataRequired()])
-    captain_password = PasswordField('Пароль капитана', validators=[DataRequired()])
-    submit = SubmitField('Доступ')
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        return redirect('/success')
-    return render_template('login.html', title='Аварийный доступ', form=form)
 
 
 @app.route('/distribution')
@@ -144,8 +139,65 @@ def register():
         user.address = form.address.data
         db_sess.add(user)
         db_sess.commit()
+        login_user(user)
+        return redirect('/')
 
     return render_template('register.html', form=form)
+
+
+class LoginForm(FlaskForm):
+    email = EmailField('Email', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    remember_me = BooleanField('Remember me')
+    submit = SubmitField('Login')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.email == form.email.data).first()
+        if user and user.check_password(form.password.data):
+            login_user(user, remember=form.remember_me.data)
+            return redirect('/')
+        return render_template('login.html', form=form, message='Wrong password or email')
+
+    return render_template('login.html', form=form)
+
+
+class AddJob(FlaskForm):
+    job = StringField('Job name', validators=[DataRequired()])
+    team_leader = IntegerField('Team Leader ID', validators=[DataRequired()])
+    work_size = IntegerField('Work size in hours', validators=[DataRequired()])
+    collaborators = StringField('Collaborators IDs', validators=[DataRequired()])
+    is_finished = BooleanField('Is job finished?')
+    submit = SubmitField('Add')
+
+
+@app.route('/add_job', methods=["GET", "POST"])
+def add_job():
+    form = AddJob()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        job = Jobs()
+        job.team_leader = form.team_leader.data
+        job.job = form.job.data
+        job.work_size = form.work_size.data
+        job.collaborators = form.collaborators.data
+        job.is_finished = form.is_finished.data
+        db_sess.add(job)
+        db_sess.commit()
+        return redirect('/')
+
+    return render_template('add_job.html', form=form)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect('/')
 
 
 if __name__ == '__main__':
