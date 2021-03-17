@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
     <h2>Works log</h2>
+    {% if current_user.is_authenticated %}
+        <a type="button" class="btn btn-primary" href="/add_job" role="button">Add job</a>
+    {% endif %}
     {% for job in jobs %}
         <h3>Action # {{job.id}}</h3>
         <div>
@@ -20,6 +23,10 @@
                     <td>{{'Finished' if job.is_finished else 'Is not finished'}}</td>
                 </tr>
             </table>
+            {% if current_user.id in [1, job.team_leader] %}
+                <a type="button" class="btn btn-warning" href="/edit_job/{{job.id}}" role="button">Edit job</a>
+                <a type="button" class="btn btn-danger" href="/delete_job/{{job.id}}" role="button">Delete job</a>
+            {% endif %}
         </div>
     {% endfor %}
 {% endblock %}

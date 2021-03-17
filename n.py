@@ -1,4 +1,4 @@
-from flask import Flask, request, url_for, redirect, render_template
+from flask import Flask, request, url_for, redirect, render_template, abort
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, FileField, IntegerField, \
     BooleanField, DateField
@@ -8,7 +8,8 @@ from werkzeug.utils import secure_filename
 from data import db_session
 from data.users import User
 from data.jobs import Jobs
-from flask_login import LoginManager, login_required, login_user, logout_user
+from flask_login import LoginManager, login_required, login_user, logout_user, \
+    current_user
 import datetime
 import json
 
@@ -197,6 +198,42 @@ def add_job():
 @login_required
 def logout():
     logout_user()
+    return redirect('/')
+
+
+@app.route('/edit_job/<int:job_id>', methods=["GET", "POST"])
+@login_required
+def edit_job(job_id):
+    form = AddJob()
+    db_sess = db_session.create_session()
+    job = db_sess.query(Jobs).filter(Jobs.id == job_id).first()
+    if current_user.id not in [1, job.team_leader]:
+        abort(404)
+    if form.validate_on_submit():
+        job.team_leader = form.team_leader.data
+        job.is_finished = form.is_finished.data
+        job.job = form.job.data
+        job.collaborators = form.collaborators.data
+        job.work_size = form.work_size.data
+        db_sess.commit()
+        return redirect('/')
+    form.team_leader.data = job.team_leader
+    form.is_finished.data = job.is_finished
+    form.job.data = job.job
+    form.collaborators.data = job.collaborators
+    form.work_size.data = job.work_size
+
+    return render_template('add_job.html', form=form)
+
+
+@app.route('/delete_job/<int:job_id>')
+@login_required
+def delete_job(job_id):
+    db_sess = db_session.create_session()
+    job = db_sess.query(Jobs).filter(Jobs.id == job_id).first()
+    if current_user.id in [1, job.team_leader]:
+        db_sess.delete(job)
+        db_sess.commit()
     return redirect('/')
 
 
